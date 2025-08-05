@@ -1,10 +1,13 @@
 # LEGO Price Monitor
 
-A web scraping and monitoring system for LEGO product prices.
+A web scraping and monitoring system for LEGO product prices using AI agents.
 
 ## Project Overview
 
 This project is a LEGO price monitoring system that scrapes LEGO product information from various websites, tracks price changes, and sends notifications when significant price drops occur. It uses the CrewAI framework to orchestrate different agents for web scraping, data analysis, and notifications.
+
+[![GitHub Repository](https://img.shields.io/badge/GitHub-lego--price--monitor-blue?logo=github)](https://github.com/ekinbulut/lego-price-monitor)
+[![Python Version](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/downloads/)
 
 ## Key Features
 
@@ -70,7 +73,15 @@ The `config.json` file contains the following settings:
 ### Prerequisites
 
 - Python 3.12+
+- Ollama server (for AI agent capabilities)
 - Podman and Podman Compose (for containerized deployment)
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/ekinbulut/lego-price-monitor.git
+cd lego-price-monitor
+```
 
 ### Local Development Setup
 
@@ -98,6 +109,37 @@ To test the scraper functionality:
 python3 scraper_test.py
 ```
 
+## Running the Application
+
+### Using Python Directly
+
+```bash
+python main.py
+```
+
+### Using Docker
+
+1. Build and start the container:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Check the logs:
+   ```bash
+   docker-compose logs -f
+   ```
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 This will scrape the configured LEGO categories and save the results to the `data/` directory.
 
 ## Podman Deployment
