@@ -1,0 +1,20 @@
+{
+  "lego_categories": [
+    {
+      "name": "Architecture",
+      "url": "https://lego.tr/themes/architecture"
+    }
+  ],
+  "scrape_interval_hours": 6,
+  "product_selector": ".product-item",
+  "price_selector": ".product-price, span",
+  "name_selector": ".image-wrapper.image-animate, a",
+  "image_selector": ".lazyloaded, img",
+  "description_selector": ".product-description",
+  "ollama_host": "localhost",
+  "ollama_port": "11434",
+  "ollama_model": "llama3",
+  "price_threshold_percent": 5.0,
+  "use_javascript": true,
+  "max_pages": 5
+}

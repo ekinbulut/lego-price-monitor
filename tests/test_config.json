@@ -1,0 +1,21 @@
+{
+  "lego_categories": [
+    {
+      "name": "Architecture",
+      "url": "https://www.lego.com/en-us/themes/architecture"
+    }
+  ],
+  "scrape_interval_hours": 1,
+  "product_selector": "[data-test=\"product-item\"]",
+  "name_selector": "[data-test=\"product-title\"]",
+  "price_selector": "[data-test=\"price\"]",
+  "id_selector": "[data-test=\"product-item-number\"]",
+  "image_selector": "img",
+  "description_selector": ".product-description",
+  "ollama_host": "localhost",
+  "ollama_port": "11434",
+  "ollama_model": "llama3",
+  "price_threshold_percent": 5.0,
+  "use_javascript": true,
+  "max_pages": 1
+}

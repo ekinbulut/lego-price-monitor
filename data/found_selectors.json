@@ -1,0 +1,29 @@
+{
+  "container": ".product-item",
+  "products_found": 10,
+  "selectors": {
+    "price": {
+      "potential_selectors": [
+        ".product-price",
+        "span"
+      ],
+      "text_content": "13.299,00 TL"
+    },
+    "image": {
+      "potential_selectors": [
+        ".lazyloaded",
+        "img"
+      ],
+      "src": "https://lego.tr/product21063-lego-architecture-neuschwanstein-satosu-resmi-lego-store-tr-37075-74-K.jpg",
+      "alt": "21063 LEGO® Architecture Neuschwanstein Şatosu - Architecture"
+    },
+    "title_link": {
+      "potential_selectors": [
+        ".image-wrapper.image-animate",
+        "a"
+      ],
+      "href": "https://lego.tr/product/21063-lego-architecture-neuschwanstein-satosu",
+      "text_content": ""
+    }
+  }
+}

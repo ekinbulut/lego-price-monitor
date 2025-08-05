@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  lego_monitor:
+    build: .
+    environment:
+      - OLLAMA_HOST=host.docker.internal  # Special DNS to reach host machine
+      - OLLAMA_PORT=11434
+      - OLLAMA_MODEL=llama3
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=user
+      - POSTGRES_DB=legotracker
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
