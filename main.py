@@ -103,22 +103,14 @@ def initialize_agents(llm, category_name):
     price_comparison_tool = PriceComparisonTool()
     change_detection_tool = ChangeDetectionTool()
     
-    # Convert tools to dictionaries as required by CrewAI
-    def tool_to_dict(tool):
-        return {
-            "name": tool.name,
-            "description": tool.description,
-            "type": tool.name
-        }
-    
-    # Create specialized agents
+    # Create specialized agents with tools directly (no conversion needed for newer CrewAI)
     scraper_agent = Agent(
         role=f"LEGO {category_name} Scraper",
         goal=f"Extract accurate product data from the LEGO {category_name} collection",
         backstory=f"I'm specialized in navigating LEGO websites and extracting {category_name} product information",
         verbose=True,
         llm=llm,
-        tools=[tool_to_dict(lego_web_navigation_tool), tool_to_dict(lego_data_extraction_tool)]
+        tools=[lego_web_navigation_tool, lego_data_extraction_tool]
     )
 
     parser_agent = Agent(
@@ -127,7 +119,7 @@ def initialize_agents(llm, category_name):
         backstory=f"I excel at parsing LEGO {category_name} data and identifying product details",
         verbose=True,
         llm=llm,
-        tools=[tool_to_dict(data_normalization_tool), tool_to_dict(schema_detection_tool)]
+        tools=[data_normalization_tool, schema_detection_tool]
     )
 
     analyzer_agent = Agent(
@@ -136,7 +128,7 @@ def initialize_agents(llm, category_name):
         backstory=f"I'm an analytical expert who finds patterns and changes in LEGO {category_name} product data",
         verbose=True,
         llm=llm,
-        tools=[tool_to_dict(price_comparison_tool), tool_to_dict(change_detection_tool)]
+        tools=[price_comparison_tool, change_detection_tool]
     )
     
     return scraper_agent, parser_agent, analyzer_agent

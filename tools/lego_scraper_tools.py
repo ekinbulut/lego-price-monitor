@@ -1,4 +1,4 @@
-from langchain.tools import BaseTool
+from crewai.tools.base_tool import BaseTool
 from typing import Optional, Type, List, Dict, Any
 from pydantic import BaseModel, Field
 import requests
@@ -13,26 +13,11 @@ import os
 
 logger = logging.getLogger(__name__)
 
-class LegoWebNavigationInput(BaseModel):
-    url: str = Field(..., description="The URL of the LEGO website to navigate to")
-    category_name: str = Field("Uncategorized", description="The name of the LEGO category being scraped")
-    use_javascript: bool = Field(True, description="Whether to use a headless browser for JavaScript rendering")
-    pagination_selector: Optional[str] = Field(None, description="CSS selector for pagination links, if any")
-    max_pages: int = Field(5, description="Maximum number of pages to scrape")
-
 class LegoWebNavigationTool(BaseTool):
     name: str = "lego_web_navigation_tool"
     description: str = "Navigate to LEGO website and handle pagination. Returns HTML content."
-    args_schema: Type[BaseModel] = LegoWebNavigationInput
     
-    def _run(
-        self, 
-        url: str, 
-        category_name: str = "Uncategorized",
-        use_javascript: bool = True, 
-        pagination_selector: Optional[str] = None, 
-        max_pages: int = 5
-    ) -> str:
+    def _run(self, url: str, category_name: str = "Uncategorized", use_javascript: bool = True, max_pages: int = 5) -> str:
         logger.info(f"Navigating to LEGO {category_name} category: {url} with max_pages={max_pages}")
         all_html = []
         
@@ -133,19 +118,9 @@ class LegoWebNavigationTool(BaseTool):
         
         return json.dumps(result)
 
-class LegoDataExtractionInput(BaseModel):
-    category_data: str = Field(..., description="JSON string containing category metadata and HTML content")
-    product_selector: str = Field(..., description="CSS selector to identify LEGO product elements")
-    name_selector: Optional[str] = Field(None, description="CSS selector for LEGO product name")
-    price_selector: Optional[str] = Field(None, description="CSS selector for LEGO product price")
-    id_selector: Optional[str] = Field(None, description="CSS selector for LEGO product ID/set number")
-    image_selector: Optional[str] = Field(None, description="CSS selector for LEGO product image")
-    description_selector: Optional[str] = Field(None, description="CSS selector for LEGO product description")
-
 class LegoDataExtractionTool(BaseTool):
     name: str = "lego_data_extraction_tool"
     description: str = "Extract LEGO product data from HTML content using BeautifulSoup or Playwright."
-    args_schema: Type[BaseModel] = LegoDataExtractionInput
     
     def _run(
         self, 
@@ -371,7 +346,3 @@ class LegoDataExtractionTool(BaseTool):
                 
         # Default for Turkish LEGO site
         return "TRY"
-
-# Instantiate the tools
-lego_web_navigation_tool = LegoWebNavigationTool()
-lego_data_extraction_tool = LegoDataExtractionTool()

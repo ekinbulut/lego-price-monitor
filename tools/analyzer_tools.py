@@ -1,4 +1,4 @@
-from langchain.tools import BaseTool
+from crewai.tools.base_tool import BaseTool
 from typing import List, Dict, Any, Optional, Type
 from pydantic import BaseModel, Field
 import json
@@ -7,15 +7,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class PriceComparisonInput(BaseModel):
-    current_data: str = Field(..., description="JSON string containing current product data")
-    historical_data: str = Field(..., description="JSON string containing historical product data")
-    price_threshold: float = Field(0.0, description="Minimum percentage change to consider significant")
-
 class PriceComparisonTool(BaseTool):
     name: str = "price_comparison_tool"
     description: str = "Compare current product prices with historical data to detect changes"
-    args_schema: Type[BaseModel] = PriceComparisonInput
     
     def _run(self, current_data: str, historical_data: str, price_threshold: float = 0.0) -> str:
         try:
@@ -82,14 +76,9 @@ class PriceComparisonTool(BaseTool):
         except (ValueError, TypeError):
             return None
 
-class ChangeDetectionInput(BaseModel):
-    current_data: str = Field(..., description="JSON string containing current product data")
-    historical_data: str = Field(..., description="JSON string containing historical product data")
-
 class ChangeDetectionTool(BaseTool):
     name: str = "change_detection_tool"
     description: str = "Detect new products, removed products, and other changes"
-    args_schema: Type[BaseModel] = ChangeDetectionInput
     
     def _run(self, current_data: str, historical_data: str) -> str:
         try:
@@ -178,7 +167,3 @@ class ChangeDetectionTool(BaseTool):
         except Exception as e:
             logger.error(f"Change detection error: {e}")
             return json.dumps({"error": f"Change detection failed: {str(e)}"})
-
-# Instantiate the tools
-price_comparison_tool = PriceComparisonTool()
-change_detection_tool = ChangeDetectionTool()

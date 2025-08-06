@@ -1,23 +1,17 @@
-from langchain.tools import BaseTool
+from crewai.tools.base_tool import BaseTool
 from typing import List, Dict, Any, Optional, Type
 from pydantic import BaseModel, Field
 import json
 import re
 from datetime import datetime
 
-class DataNormalizationInput(BaseModel):
-    raw_data: str = Field(..., description="JSON string containing raw product data")
-    expected_fields: List[str] = Field(
-        ["name", "price", "id", "image_url", "description"], 
-        description="List of expected fields in the normalized output"
-    )
-
 class DataNormalizationTool(BaseTool):
     name: str = "data_normalization_tool"
     description: str = "Clean and normalize raw product data to ensure consistency"
-    args_schema: Type[BaseModel] = DataNormalizationInput
     
-    def _run(self, raw_data: str, expected_fields: List[str]) -> str:
+    def _run(self, raw_data: str, expected_fields: List[str] = None) -> str:
+        if expected_fields is None:
+            expected_fields = ["name", "price", "id", "image_url", "description"]
         try:
             # Parse JSON data
             products = json.loads(raw_data)
@@ -82,14 +76,9 @@ class DataNormalizationTool(BaseTool):
         # Create a hash for the ID
         return hashlib.md5(id_base.encode()).hexdigest()
 
-class SchemaDetectionInput(BaseModel):
-    raw_data: str = Field(..., description="JSON string containing raw product data")
-    target_schema: Optional[str] = Field(None, description="Optional target schema as JSON string")
-
 class SchemaDetectionTool(BaseTool):
     name: str = "schema_detection_tool"
     description: str = "Detect and map product data to a consistent schema"
-    args_schema: Type[BaseModel] = SchemaDetectionInput
     
     def _run(self, raw_data: str, target_schema: Optional[str] = None) -> str:
         try:
@@ -170,7 +159,3 @@ class SchemaDetectionTool(BaseTool):
                 mapped_product[field] = None
         
         return mapped_product
-
-# Instantiate the tools
-data_normalization_tool = DataNormalizationTool()
-schema_detection_tool = SchemaDetectionTool()
