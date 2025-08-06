@@ -1,4 +1,4 @@
-from langchain.tools import BaseTool
+from crewai.tools.base_tool import BaseTool
 from typing import Optional, Type, List, Dict, Any
 from pydantic import BaseModel, Field
 import requests
@@ -13,26 +13,11 @@ import os
 
 logger = logging.getLogger(__name__)
 
-class LegoWebNavigationInput(BaseModel):
-    url: str = Field(..., description="The URL of the LEGO website to navigate to")
-    category_name: str = Field("Uncategorized", description="The name of the LEGO category being scraped")
-    use_javascript: bool = Field(True, description="Whether to use a headless browser for JavaScript rendering")
-    pagination_selector: Optional[str] = Field(None, description="CSS selector for pagination links, if any")
-    max_pages: int = Field(5, description="Maximum number of pages to scrape")
-
 class LegoWebNavigationTool(BaseTool):
     name: str = "lego_web_navigation_tool"
     description: str = "Navigate to LEGO website and handle pagination. Returns HTML content."
-    args_schema: Type[BaseModel] = LegoWebNavigationInput
     
-    def _run(
-        self, 
-        url: str, 
-        category_name: str = "Uncategorized",
-        use_javascript: bool = True, 
-        pagination_selector: Optional[str] = None, 
-        max_pages: int = 5
-    ) -> str:
+    def _run(self, url: str, category_name: str = "Uncategorized", use_javascript: bool = True, max_pages: int = 5) -> str:
         logger.info(f"Navigating to LEGO {category_name} category: {url} with max_pages={max_pages}")
         all_html = []
         
@@ -133,19 +118,9 @@ class LegoWebNavigationTool(BaseTool):
         
         return json.dumps(result)
 
-class LegoDataExtractionInput(BaseModel):
-    category_data: str = Field(..., description="JSON string containing category metadata and HTML content")
-    product_selector: str = Field(..., description="CSS selector to identify LEGO product elements")
-    name_selector: Optional[str] = Field(None, description="CSS selector for LEGO product name")
-    price_selector: Optional[str] = Field(None, description="CSS selector for LEGO product price")
-    id_selector: Optional[str] = Field(None, description="CSS selector for LEGO product ID/set number")
-    image_selector: Optional[str] = Field(None, description="CSS selector for LEGO product image")
-    description_selector: Optional[str] = Field(None, description="CSS selector for LEGO product description")
-
 class LegoDataExtractionTool(BaseTool):
     name: str = "lego_data_extraction_tool"
     description: str = "Extract LEGO product data from HTML content using BeautifulSoup or Playwright."
-    args_schema: Type[BaseModel] = LegoDataExtractionInput
     
     def _run(
         self, 
@@ -183,7 +158,11 @@ class LegoDataExtractionTool(BaseTool):
                 if name_selector:
                     name_element = product_element.select_one(name_selector)
                     if name_element:
-                        product["name"] = name_element.text.strip()
+                        # If the selector points to an img element, get the alt attribute
+                        if name_element.name == 'img' and name_element.has_attr('alt'):
+                            product["name"] = name_element['alt'].strip()
+                        else:
+                            product["name"] = name_element.text.strip()
                 
                 # Try alternative methods to find name if selector didn't work
                 if "name" not in product:
@@ -218,7 +197,15 @@ class LegoDataExtractionTool(BaseTool):
                 if id_selector:
                     id_element = product_element.select_one(id_selector)
                     if id_element:
-                        product["id"] = id_element.text.strip()
+                        # If the selector points to an img element, get the alt attribute
+                        if id_element.name == 'img' and id_element.has_attr('alt'):
+                            alt_text = id_element['alt'].strip()
+                            # Extract set number from alt text like "10001 LEGO Architecture..."
+                            set_match = re.search(r'(\d{4,5})', alt_text)
+                            if set_match:
+                                product["id"] = set_match.group(1)
+                        else:
+                            product["id"] = id_element.text.strip()
                 
                 # Try to extract set number from various attributes and patterns
                 if "id" not in product:
@@ -328,17 +315,25 @@ class LegoDataExtractionTool(BaseTool):
         if not price_text:
             return 0.0
             
-        # Convert Turkish Lira (₺) format if present
-        price_text = price_text.replace(".", "").replace(",", ".")
-        
-        # Extract just the digits and decimal point
+        # First extract the numeric pattern
         import re
-        # Find the first price-like pattern
-        price_match = re.search(r'(\d+(?:[.,]\d+)?)', price_text)
+        # Find price pattern like "299.99", "299,99", "₺299.99" etc.
+        price_match = re.search(r'(\d+[.,]\d+|\d+)', price_text)
         if price_match:
             price_str = price_match.group(1)
             # Handle both comma and period as decimal separators
-            price_str = price_str.replace(',', '.')
+            # For Turkish format, if it's like "299,99", convert to "299.99"
+            if ',' in price_str and '.' not in price_str:
+                price_str = price_str.replace(',', '.')
+            # If there's both, assume European format like "1.299,99"
+            elif ',' in price_str and '.' in price_str:
+                # Remove thousands separator (period) and convert decimal comma to period
+                parts = price_str.split(',')
+                if len(parts) == 2:
+                    # Remove all periods (thousands separators) from the first part
+                    integer_part = parts[0].replace('.', '')
+                    decimal_part = parts[1]
+                    price_str = f"{integer_part}.{decimal_part}"
             try:
                 return float(price_str)
             except ValueError:
@@ -371,7 +366,3 @@ class LegoDataExtractionTool(BaseTool):
                 
         # Default for Turkish LEGO site
         return "TRY"
-
-# Instantiate the tools
-lego_web_navigation_tool = LegoWebNavigationTool()
-lego_data_extraction_tool = LegoDataExtractionTool()
