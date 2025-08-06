@@ -158,7 +158,11 @@ class LegoDataExtractionTool(BaseTool):
                 if name_selector:
                     name_element = product_element.select_one(name_selector)
                     if name_element:
-                        product["name"] = name_element.text.strip()
+                        # If the selector points to an img element, get the alt attribute
+                        if name_element.name == 'img' and name_element.has_attr('alt'):
+                            product["name"] = name_element['alt'].strip()
+                        else:
+                            product["name"] = name_element.text.strip()
                 
                 # Try alternative methods to find name if selector didn't work
                 if "name" not in product:
@@ -193,7 +197,15 @@ class LegoDataExtractionTool(BaseTool):
                 if id_selector:
                     id_element = product_element.select_one(id_selector)
                     if id_element:
-                        product["id"] = id_element.text.strip()
+                        # If the selector points to an img element, get the alt attribute
+                        if id_element.name == 'img' and id_element.has_attr('alt'):
+                            alt_text = id_element['alt'].strip()
+                            # Extract set number from alt text like "10001 LEGO Architecture..."
+                            set_match = re.search(r'(\d{4,5})', alt_text)
+                            if set_match:
+                                product["id"] = set_match.group(1)
+                        else:
+                            product["id"] = id_element.text.strip()
                 
                 # Try to extract set number from various attributes and patterns
                 if "id" not in product:
@@ -303,17 +315,25 @@ class LegoDataExtractionTool(BaseTool):
         if not price_text:
             return 0.0
             
-        # Convert Turkish Lira (₺) format if present
-        price_text = price_text.replace(".", "").replace(",", ".")
-        
-        # Extract just the digits and decimal point
+        # First extract the numeric pattern
         import re
-        # Find the first price-like pattern
-        price_match = re.search(r'(\d+(?:[.,]\d+)?)', price_text)
+        # Find price pattern like "299.99", "299,99", "₺299.99" etc.
+        price_match = re.search(r'(\d+[.,]\d+|\d+)', price_text)
         if price_match:
             price_str = price_match.group(1)
             # Handle both comma and period as decimal separators
-            price_str = price_str.replace(',', '.')
+            # For Turkish format, if it's like "299,99", convert to "299.99"
+            if ',' in price_str and '.' not in price_str:
+                price_str = price_str.replace(',', '.')
+            # If there's both, assume European format like "1.299,99"
+            elif ',' in price_str and '.' in price_str:
+                # Remove thousands separator (period) and convert decimal comma to period
+                parts = price_str.split(',')
+                if len(parts) == 2:
+                    # Remove all periods (thousands separators) from the first part
+                    integer_part = parts[0].replace('.', '')
+                    decimal_part = parts[1]
+                    price_str = f"{integer_part}.{decimal_part}"
             try:
                 return float(price_str)
             except ValueError:

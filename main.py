@@ -223,7 +223,7 @@ def process_lego_category(category_info, config, llm):
     category_monitoring_crew = Crew(
         agents=[scraper_agent, parser_agent, analyzer_agent],
         tasks=[scraping_task, parsing_task, analysis_task],
-        verbose=2,
+        verbose=True,
         process=Process.sequential  # Tasks will run in the defined order
     )
 
