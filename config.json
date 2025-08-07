@@ -12,7 +12,7 @@
   "id_selector": "img[alt]",
   "image_selector": ".lazyloaded",
   "description_selector": ".product-description",
-  "ollama_host": "host.docker.internal",
+  "ollama_host": "192.168.0.112",
   "ollama_port": "11434",
   "ollama_model": "gemma3:4b",
   "price_threshold_percent": 5.0,

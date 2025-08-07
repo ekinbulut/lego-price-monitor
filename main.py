@@ -5,7 +5,8 @@ from datetime import datetime
 import time
 import schedule
 from crewai import Agent, Crew, Task, Process
-from langchain_ollama import OllamaLLM  # Corrected import
+# from langchain_community.llms import Ollama
+from crewai import LLM
 
 # Import our tools
 from tools.lego_scraper_tools import LegoWebNavigationTool, LegoDataExtractionTool
@@ -58,14 +59,17 @@ def load_config():
 
 # Initialize Ollama LLM
 def initialize_llm(config):
-    ollama_host = os.getenv("OLLAMA_HOST", config.get("ollama_host", "host.docker.internal"))
+    ollama_host = os.getenv("OLLAMA_HOST", config.get("ollama_host", "localhost"))
     ollama_port = os.getenv("OLLAMA_PORT", config.get("ollama_port", "11434"))
     ollama_model = os.getenv("OLLAMA_MODEL", config.get("ollama_model", "gemma3:4b"))
     
     ollama_base_url = f"http://{ollama_host}:{ollama_port}"
     logger.info(f"Connecting to Ollama at {ollama_base_url} using model {ollama_model}")
     
-    return OllamaLLM(base_url=ollama_base_url, model=ollama_model)
+    return LLM(
+    model=f"ollama/{ollama_model}",
+    base_url=ollama_base_url
+)
 
 # Load historical data for a specific category
 def load_historical_data(category_name):
